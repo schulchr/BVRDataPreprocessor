@@ -1,5 +1,4 @@
-#include "main.h"
-
+#include "Gridpoints.h"
 int main()
 {
 	DataInfo info;
@@ -110,19 +109,23 @@ void processBinary(DataInfo info)
 	if (info.stride == StrideTypes::BYT)
 		info.data = (unsigned char *)malloc(info.depth * info.height * info.width * sizeof(unsigned char));
 
-	/*Read in all the data (might need to handle this differently...
+	/*
+	Read in all the data (might need to handle this differently...
 	but since it's assumed this program will ran on a desktop, it should have enough memory)
 	*/
 	fread(info.data, sizeof(unsigned char), info.depth * info.width * info.height, file);
 	
-	splitData(info, 2);
+	info.factor.depthFactor = info.factor.heightFactor = info.factor.widthFactor = 4;
+
+	splitData(info);
+	setupTextureGrid(info);
 
 }
 
 /*
 	This will downsize the data by a give factor. 
 */
-void downsizeData(DataInfo info, int factor)
+void downsizeData(DataInfo info)
 {
 
 }
@@ -139,11 +142,13 @@ Given a 1024x1024x1024 data set, and a factor of 8, this function will split up 
 
 The idea of this is to allow the file sizes to be small enough to load into a memory limited system. 
 */
-void splitData(DataInfo info, int factor)
+void splitData(DataInfo info)
 {
-	int splitWidthX = info.width / factor;
-	int splitWidthY = info.height / factor;
-	int splitWidthZ = info.depth / factor;
+	//Here, there could be different factors per dimension.
+	//For example, if there was a texture that was 2048x2048x200, we wouldn't care if the texture was split along the depth. 
+	int splitWidthX = info.width / info.factor.widthFactor;
+	int splitWidthY = info.height / info.factor.heightFactor;
+	int splitWidthZ = info.depth / info.factor.depthFactor;
 
 	int fileCount = 0; //keeps track of the file name for the chunked up textures
 	for (int z = 0; z < info.depth; z += splitWidthZ)
@@ -152,7 +157,7 @@ void splitData(DataInfo info, int factor)
 		{
 			for (int x = 0; x < info.width; x += splitWidthX)
 			{
-				helperSplit(info, factor, x, x + splitWidthX, y, y + splitWidthY, z, z + splitWidthZ, splitWidthX, splitWidthY, splitWidthZ, fileCount++);
+				helperSplit(info, x, x + splitWidthX, y, y + splitWidthY, z, z + splitWidthZ, splitWidthX, splitWidthY, splitWidthZ, fileCount++);
 			}
 		}
 	}
@@ -161,7 +166,7 @@ void splitData(DataInfo info, int factor)
 /*
 Helper function for writing data to the individual files
 */
-void helperSplit(DataInfo info, int factor, int x_start, int x_end, int y_start, int y_end, int z_start, int z_end, int chunkWidth, int chunkHeight, int chunkDepth, int fileNum)
+void helperSplit(DataInfo info, int x_start, int x_end, int y_start, int y_end, int z_start, int z_end, int chunkWidth, int chunkHeight, int chunkDepth, int fileNum)
 {
 	cout << "starting to split at x: " << x_start << " y: " << y_start << " z: " << z_start << "\n";
 	

@@ -16,6 +16,12 @@ enum StrideTypes{
 	BYT,
 	SHOR
 };
+
+struct Factor{
+	int widthFactor;
+	int heightFactor;
+	int depthFactor;
+};
 //This is used for the reading in the .size file to gather a description of the data to be read in. 
 struct DataInfo{
 	string sizeFile;
@@ -32,6 +38,7 @@ struct DataInfo{
 	depth = 50
 	*/
 	int width, height, depth;
+	Factor factor; //factor of what to split by
 	int stride;
 	int dataType;
 
@@ -41,5 +48,5 @@ struct DataInfo{
 void processBinary(DataInfo info);
 void downsampleByFour(unsigned char *data, int factor);
 
-void splitData(DataInfo info, int factor);
-void helperSplit(DataInfo info, int factor, int x_start, int x_end, int y_start, int y_end, int z_start, int z_end, int chunkWidth, int chunkHeight, int chunkDepth, int fileNum);
+void splitData(DataInfo info);
+void helperSplit(DataInfo info, int x_start, int x_end, int y_start, int y_end, int z_start, int z_end, int chunkWidth, int chunkHeight, int chunkDepth, int fileNum);
